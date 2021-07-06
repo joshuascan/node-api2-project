@@ -11,7 +11,10 @@ router.get("/", (req, res) => {
     .catch((err) => {
       res
         .status(500)
-        .json({ message: "The posts information could not be retrieved" });
+        .json({
+          message: "The posts information could not be retrieved",
+          err: err.message,
+        });
     });
 });
 
@@ -29,13 +32,34 @@ router.get("/:id", (req, res) => {
     .catch((err) => {
       res
         .status(500)
-        .json({ message: "The post information could not be retrieved" });
+        .json({
+          message: "The post information could not be retrieved",
+          err: err.message,
+        });
     });
 });
 
 router.post("/", (req, res) => {
-  res.status(200).json(req.method + "new post");
-  console.log(req.method);
+  const { title, contents } = req.body;
+  if (!title || !contents) {
+    res
+      .status(400)
+      .json({ message: "Please provide title and contents for the post" });
+  } else {
+    Post.insert({ title, contents })
+      .then(({ id }) => {
+        return Post.findById(id);
+      })
+      .then((post) => {
+        res.status(201).json(post);
+      })
+      .catch((err) => {
+        res.status(500).json({
+          message: "There was an error while saving the post to the database",
+          err: err.message,
+        });
+      });
+  }
 });
 
 router.put("/:id", (req, res) => {
